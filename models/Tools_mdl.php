@@ -290,4 +290,35 @@ class Tools_mdl extends CI_Model{
     }
 
 
+    public function setting_users($id)
+    {
+        if($this->session->userdata('logged_in'))
+          {
+              $session_data = $this->session->userdata('logged_in');
+              $data       = array();
+              $query      = "SELECT mod_company.inisial, mod_company.company_id, mod_employee.*
+                             FROM mod_employee
+                             INNER JOIN mod_company ON mod_employee.company_code = mod_company.company_code
+                             WHERE employee_code='$id' ";
+
+              $Q          = $this->db->query($query);
+
+                  if ($Q->num_rows() > 0)
+                      {
+                        foreach ($Q->result_array() as $row)
+                          {
+                            $data[] = $row;
+                          }
+                      }
+            return $data;
+          }else{
+            redirect('login', 'refresh');
+        }
+    }
+
+
+    public function save_users_login($item){
+        $this->db->insert('sys_users',$item);
+    }
+
 }

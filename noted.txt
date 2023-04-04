@@ -1,0 +1,21 @@
+
+1. GIT Proses:
+
+   - create new repository
+   - proses git init computer
+   - proses git add .
+   - proses git commit -m "deskripsi upload"
+   - proses git branch -M main (membuat branch main untuk project utama)
+   - proses git remote, contoh: git remote add origin https://github.com/benimka/hrms_mka.git (ambil dari link git)
+   - terakhir proses push ke git:
+   - proses git push -u origin main
+     selesai
+
+2. Settup branch utama hanya untuk head project (berikan approval 1 saja)
+
+3. Settup Project
+   - add kolaborasi team
+   - invite member (perlu konfirmasi email member)
+   - invite re-write member (tidak perlu konfirmasi email member)
+   - buat todo list pengerjaan
+
