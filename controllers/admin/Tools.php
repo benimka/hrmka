@@ -219,7 +219,7 @@ class Tools extends CI_Controller {
 				$data['getmodule']			= $this->tools_mdl->getdatamodule();
 				$data['getusers']			= $this->tools_mdl->getusers();
 
-	            $this->load->view('default/header', $data);
+	         $this->load->view('default/header', $data);
 			  	$this->load->view('backend/tools/users_setting', $data);
 			  	$this->load->view('default/footer', $data);
 
@@ -365,9 +365,58 @@ class Tools extends CI_Controller {
 
 
 	public function hash ( $string )
-    {
+   {
        return hash ('sha512', $string . config_item('encryption_key'));
-    }
+   }
+
+
+   public function setting_users()
+	{
+		if($this->session->userdata('logged_in'))
+		   	{
+		   		$id  					= $this->uri->segment('4');
+					$session_data   		= $this->session->userdata('logged_in');
+					$data['name'] 			= $session_data['name'];
+					$data['user_name'] 		= $session_data['user_name'];
+					$data['user_status'] 	= $session_data['user_status'];
+					$data['user_type'] 		= $session_data['user_type'];
+					$data['role_id'] 		= $session_data['role_id'];
+					$data['company_id'] 	= $session_data['company_id'];
+					$data['setting_users']	= $this->tools_mdl->setting_users($id);
+					$data['title']        	= 'Setting Users';
+					$data['aktif']        	= 'active treeview';
+
+					$this->load->view('default/header', $data);
+					$this->load->view('backend/tools/users_setting_tpl', $data);
+					$this->load->view('default/footer', $data);
+			}else{
+				redirect('login', 'refresh');
+			}
+	}
+
+
+	public function create_users_login()
+	 {
+ 		$item = array (
+ 			'name'   		    => $this->input->post('name'),
+ 			'user_name'  		=> $this->input->post('user_name'),
+ 			'user_password'     => $this->users_mdl->hash($this->input->post("user_password1")),
+ 			'user_status'   	=> 1,
+ 			'company_code'   	=> $this->input->post('company_code'),
+ 			'department'   		=> $this->input->post('department'),
+			'role_id'   		=> $this->input->post('role_id'),
+			'company_id'   		=> $this->input->post('company_id'),
+			'employee_code'   	=> $this->input->post('employee_code'),
+			'datelogin'   	    => '0000-00-00 00:00:00',
+			'created'		    => date("Y-m-d H:i:s")
+
+		);
+		
+		$this->tools_mdl->save_users_login($item);
+		$this->db->query("UPDATE mod_employee SET status_login = 1 WHERE employee_code ='".$this->input->post('employee_code')."'");
+		$this->apps->set_notification(1, "Successfully! Data has ben update");
+		redirect('/admin/tools/users_setting');
+	 }
 
 
 
