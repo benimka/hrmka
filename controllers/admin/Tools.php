@@ -418,6 +418,141 @@ class Tools extends CI_Controller {
 		redirect('/admin/tools/users_setting');
 	 }
 
+	 public function setting_config()
+	{
+		if($this->session->userdata('logged_in'))
+		   	{
+
+				$session_data   			= $this->session->userdata('logged_in');
+				$data['name'] 				= $session_data['name'];
+				$data['user_name'] 			= $session_data['user_name'];
+				$data['user_status'] 		= $session_data['user_status'];
+				$data['datelogin'] 			= $session_data['datelogin'];
+				$data['company_code'] 		= $session_data['company_code'];
+				$data['user_type'] 			= $session_data['user_type'];
+				$data['role_id'] 			= $session_data['role_id'];
+				$data['user_id'] 			= $session_data['user_id'];
+				$data['pic'] 				= $session_data['pic'];
+
+				
+				$data['title']        		= 'Setting';
+				$data['aktif']        		= 'active treeview';
+
+				$this->load->view('default/header', $data);
+			  	$this->load->view('backend/tools/config', $data);
+			  	$this->load->view('default/footer', $data);
+
+			}else{
+				redirect('login', 'refresh');
+			}
+	}
+
+	public function save_setting()
+	{
+		if($this->session->userdata('logged_in'))
+		   	{
+
+				$session_data   			= $this->session->userdata('logged_in');
+
+					$item = array(
+						'protocol'   => $this->input->post('protocol'),
+						'smtp_host'  => $this->input->post('smtp_host'),
+						'smtp_port'  => $this->input->post('smtp_port'),
+						'smtp_user'  => $this->input->post('smtp_user'),
+						'smtp_pass'  => $this->input->post('smtp_pass'),
+					);
+
+					$where = array(
+						'id'  => $this->input->post('id')
+					);
+
+					$this->tools_mdl->save_setting($item,$where);
+
+					$time = date('Y-m-d H:i:s');
+					$this->db->query("INSERT INTO sys_logs (log_date,log_description,user_id,created,modified)
+					          VALUES ('$time','setting smtp server','".$session_data['user_id']."', '$time','$time')");
+
+					$this->toastr->success('Your update successfully');
+					redirect($_SERVER['HTTP_REFERER']);
+
+				}else{
+					redirect('login', 'refresh');
+				}
+	}
+
+	public function save_setting_email()
+		{   
+			$this->db->query("UPDATE mod_send_email SET status ='".$this->input->post('values')."' WHERE id ='1'");
+			$this->toastr->success('Setting sending email has been update');
+			redirect($_SERVER['HTTP_REFERER']);
+		}
+	
+	public function send_test()
+		{
+			if($this->session->userdata('logged_in'))
+				{
+					$session_data   	 = $this->session->userdata('logged_in');
+					$data['name'] 		 = $session_data['name'];
+					$data['user_id'] 	 = $session_data['user_id'];
+					$data['user_name'] 	 = $session_data['user_name'];
+					$data['user_status'] = $session_data['user_status'];
+					$data['user_type'] 	 = $session_data['user_type'];
+					$data['role_id'] 	 = $session_data['role_id'];
+					$data['company_id']  = $session_data['company_id'];
+					$data['pic'] 		 = $session_data['pic'];
+
+					$time = date('Y-m-d H:i:s');
+					$this->db->query("INSERT INTO sys_logs (log_date,log_description,user_id,created,modified)
+										VALUES ('$time','test send email','".$session_data['user_id']."', '$time','$time')");
+
+					$bcc = array('it@pmka.web.id');
+
+					$this->load->library('email');
+
+					$config = $this->apps->config_set();
+
+					$this->email->initialize($config);
+					$this->email->set_newline("\r\n");
+					$this->email->from('it@pmka.web.id');
+					$cek_params_email = $this->db->query("SELECT * FROM mod_send_email ");
+
+							foreach ($cek_params_email->result() as $row_params){}
+
+							if($row_params->status == 2){ 
+
+								$this->email->bcc('it@pmka.web.id');
+
+							} else { 
+
+								$this->email->bcc('it@pmka.web.id');
+								$this->email->bcc($bcc);
+
+							}
+
+					$subject = "Test Email From HRMS MKA Staff ";
+
+					$this->email->subject($subject);
+					$data['judul'] 		= 'Test';
+					$data['note'] 		= 'HTML test';
+
+					$message 			= $this->load->view('backend/tools/test_mail',$data,TRUE);
+					$this->email->message($message);
+
+					if($this->email->send())
+					{
+						$this->toastr->success("Successfully");
+						redirect($_SERVER['HTTP_REFERER']);
+					}
+					else
+					{
+						show_error($this->email->print_debugger());
+					}
+
+				}else{
+					redirect('login', 'refresh');
+				}
+
+		}
 
 
 }
