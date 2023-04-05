@@ -321,4 +321,10 @@ class Tools_mdl extends CI_Model{
         $this->db->insert('sys_users',$item);
     }
 
+    public function save_setting($item,$where)
+    {
+      $this->db->where($where);
+      $this->db->update('setting',$item);
+    }
+
 }
