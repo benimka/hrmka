@@ -553,6 +553,275 @@ class Tools extends CI_Controller {
 				}
 
 		}
+	
+		public function versions()
+		{
+			if($this->session->userdata('logged_in'))
+			   	{
+					$session_data   			= $this->session->userdata('logged_in');
+					$data['name'] 				= $session_data['name'];
+					$data['user_name'] 			= $session_data['user_name'];
+					$data['user_status'] 		= $session_data['user_status'];
+					$data['role_id'] 			= $session_data['role_id'];
+					$data['user_type'] 			= $session_data['user_type'];
+					$data['counter']   	  		= $this->tools_mdl->get_count();
+					$data['company_id'] 		= $session_data['company_id'];
+					$data['module']				= $this->tools_mdl->getmodule();
+	        		$data['getversions']		= $this->tools_mdl->getversions();
+					$data['getdata']		  	= $this->tools_mdl->GetData();
+					$data['title']        		= 'company';
+					$data['aktif']        		= 'active treeview';
+
+					$this->load->view('default/header', $data);
+				  	$this->load->view('backend/tools/version/index', $data);
+				  	$this->load->view('default/footer', $data);
+
+				}else{
+
+					redirect('login', 'refresh');
+
+				}
+		}
+
+
+		public function addversions()
+		{
+			if($this->session->userdata('logged_in'))
+			   	{
+					$session_data   			= $this->session->userdata('logged_in');
+					$data['name'] 				= $session_data['name'];
+					$data['user_name'] 			= $session_data['user_name'];
+					$data['user_status'] 		= $session_data['user_status'];
+					$data['role_id'] 			= $session_data['role_id'];
+					$data['user_type'] 			= $session_data['user_type'];
+					$data['counter']   	  		= $this->tools_mdl->get_count();
+					$data['company_id'] 		= $session_data['company_id'];
+					$data['module']				= $this->tools_mdl->getmodule();
+	        		$data['getversions']		= $this->tools_mdl->getversions();
+					$data['getdata']		  	= $this->tools_mdl->GetData();
+					$data['title']        		= 'Add Version';
+					$data['aktif']        		= 'active treeview';
+
+					$this->load->view('default/header', $data);
+				  	$this->load->view('backend/tools/version/add', $data);
+				  	$this->load->view('default/footer', $data);
+
+				}else{
+
+					redirect('login', 'refresh');
+
+				}
+		}
+		
+		
+		public function send()
+		{
+			if($this->session->userdata('logged_in'))
+			   	{
+					$session_data   			= $this->session->userdata('logged_in');
+					$id                 	    = $session_data['user_id'];
+					$data['name'] 				= $session_data['name'];
+					$data['user_name'] 			= $session_data['user_name'];
+					$data['user_status'] 		= $session_data['user_status'];
+					$data['role_id'] 			= $session_data['role_id'];
+					$data['user_type'] 			= $session_data['user_type'];
+					$data['company_id'] 		= $session_data['company_id'];
+					$data['module']				= $this->tools_mdl->getmodule();
+
+					$versions_id = $this->input->post('version_id');
+
+					$this->db->query("DELETE FROM mod_versions WHERE version_id ='".$versions_id."'");
+
+
+	        		$config = $this->apps->config_set();
+
+			        $subject = $this->input->post('subject');
+			        $version = $this->input->post('version');
+			        $version_hidden = $this->input->post('version_hidden');
+			        $fix     = $this->input->post('fix');
+			        $new     = $this->input->post('new');
+			        $des     = $this->input->post('up_description');
+
+							$time = date('Y-m-d H:i:s');
+							$this->db->query("INSERT INTO sys_logs (log_date,log_description,user_id,created,modified)
+												VALUES ('$time','edit version".$version."','".$session_data['user_id']."', '$time','$time')");
+
+			        $item=array(
+			            'version'           => $version,
+			            'subject'           => $subject,
+			            'fix'              	=> $fix,
+			            'new'              	=> $new,
+			            'up_description'    => $des,
+			            'users_id'          => $id,
+			            'created'           => date("Y-m-d H:i:s"),
+			            'modified'          => date("Y-m-d H:i:s")
+			        );
+
+			        $this->tools_mdl->save_version($item);
+
+			        $this->load->library('email');
+
+			        $multi = $this->tools_mdl->get_email();
+
+			        $recipients = array();
+			        foreach($multi as $value) {
+			            $recipients[] = $value['user_name'];
+			        }
+
+			        $this->email->initialize($config);
+			        $this->email->set_newline("\r\n");
+			        $this->email->from('no-reply@pmka.web.id');
+			        $this->email->bcc($recipients);
+			        $this->email->subject($subject);
+			        $data['subject']    = $subject;
+			        $data['from']       = 'no-reply@pmka.web.id';
+			        $data['version']    = $version_hidden;
+			        $data['fix']        = $fix;
+			        $data['new']        = $new;
+			        $data['des']        = $des;
+			        $message            = $this->load->view('backend/tools/version/emailversions', $data,TRUE);
+
+			        $this->email->message($message);
+
+			        if($this->email->send())
+			        {
+						$this->apps->set_notification(1, "Version has been save");
+						redirect('admin/tools/versions');
+			        }
+			        else
+			        {
+			            show_error($this->email->print_debugger());
+			        }
+
+			  }else{
+
+					redirect('login', 'refresh');
+
+			  }
+		}
+
+		public function updversi()
+		{
+			if($this->session->userdata('logged_in'))
+			   	{
+					$session_data   			= $this->session->userdata('logged_in');
+					$data['name'] 				= $session_data['name'];
+					$data['user_name'] 			= $session_data['user_name'];
+					$data['user_status'] 		= $session_data['user_status'];
+					$data['role_id'] 			= $session_data['role_id'];
+					$data['user_type'] 			= $session_data['user_type'];
+					$data['counter']   	  		= $this->tools_mdl->get_count();
+					$data['company_id'] 		= $session_data['company_id'];
+					$data['module']				= $this->tools_mdl->getmodule();
+	        		$data['getversions']		= $this->tools_mdl->getversions();
+					$data['getdata']		  	= $this->tools_mdl->GetData();
+					$data['title']        		= 'Update Version';
+					$data['aktif']        		= 'active treeview';
+					$data['uri']        		= $this->uri->segment(4);
+
+					$this->load->view('default/header', $data);
+				  	$this->load->view('backend/tools/version/edit', $data);
+				  	$this->load->view('default/footer', $data);
+
+				}else{
+
+					redirect('login', 'refresh');
+
+				}
+		}
+
+		public function editversions()
+		{
+			if($this->session->userdata('logged_in'))
+			   	{
+					$session_data   			= $this->session->userdata('logged_in');
+					$id                 	    = $session_data['user_id'];
+					$data['name'] 				= $session_data['name'];
+					$data['user_name'] 			= $session_data['user_name'];
+					$data['user_status'] 		= $session_data['user_status'];
+					$data['role_id'] 			= $session_data['role_id'];
+					$data['user_type'] 			= $session_data['user_type'];
+					$data['company_id'] 		= $session_data['company_id'];
+					$data['module']				= $this->tools_mdl->getmodule();
+
+					$versions_id = $this->input->post('version_id');
+
+					$this->db->query("DELETE FROM mod_versions WHERE version_id ='".$versions_id."'");
+
+	        		$config = $this->apps->config_set();
+
+			        $subject = $this->input->post('subject');
+			        $version = $this->input->post('version');
+			        $version_hidden = $this->input->post('version_hidden');
+			        $fix     = $this->input->post('fix');
+			        $new     = $this->input->post('new');
+			        $des     = $this->input->post('up_description');
+
+							$time = date('Y-m-d H:i:s');
+							$this->db->query("INSERT INTO sys_logs (log_date,log_description,user_id,created,modified)
+												VALUES ('$time','edit version".$version."','".$session_data['user_id']."', '$time','$time')");
+
+			        $item=array(
+			            'version'           => $version,
+			            'subject'           => $subject,
+			            'fix'              	=> $fix,
+			            'new'              	=> $new,
+			            'up_description'    => $des,
+			            'users_id'          => $id,
+			            'created'           => date("Y-m-d H:i:s"),
+			            'modified'          => date("Y-m-d H:i:s")
+			        );
+
+			        $this->tools_mdl->save_version($item);
+
+			        $this->load->library('email');
+
+			        $multi = $this->tools_mdl->get_email();
+
+			        $recipients = array();
+			        foreach($multi as $value) {
+			            $recipients[] = $value['user_name'];
+			        }
+
+			        $this->email->initialize($config);
+			        $this->email->set_newline("\r\n");
+			        $this->email->from('no-reply@pmka.web.id');
+			        $this->email->bcc($recipients);
+			        $this->email->subject($subject);
+			        $data['subject']    = $subject;
+			        $data['from']       = 'no-reply@pmka.web.id';
+			        $data['version']    = $version_hidden;
+			        $data['fix']        = $fix;
+			        $data['new']        = $new;
+			        $data['des']        = $des;
+			        $message            = $this->load->view('backend/tools/version/emailversions', $data,TRUE);
+
+			        $this->email->message($message);
+
+			        if($this->email->send())
+			        {
+			            $this->apps->set_notification(1, "Version has been update");
+						redirect('admin/tools/versions');
+			        }
+			        else
+			        {
+			            show_error($this->email->print_debugger());
+			        }
+
+			  }else{
+
+					redirect('login', 'refresh');
+
+			  }
+		}
+		
+		public function deleteversions($id)
+		{
+			$this->db->query("DELETE FROM mod_versions WHERE version_id ='".$id."'");
+			$this->apps->set_notification(1, "Your delete successfully");
+			redirect('admin/tools/versions');
+
+		}
 
 
 }
