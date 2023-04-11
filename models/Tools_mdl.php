@@ -327,4 +327,108 @@ class Tools_mdl extends CI_Model{
       $this->db->update('setting',$item);
     }
 
+    public function get_count(){
+        if ($this->session->userdata('logged_in'))
+          {
+            $session_data 		  	= $this->session->userdata('logged_in');
+            $company_code 			= $session_data['company_code'];
+  
+              $Q 						= $this->db->query("SELECT  mod_annual_leave.approved
+                                    FROM mod_annual_leave 
+                                    INNER JOIN mod_employee ON mod_annual_leave.employee_code = mod_employee.employee_code
+                                    INNER JOIN mod_company ON mod_employee.company_code = mod_company.company_code
+                                      WHERE mod_annual_leave.approved='0' AND mod_company.company_code='$company_code' ");
+          $jml    				= $Q->num_rows();
+          return $jml;
+  
+        } else {
+          redirect('login', 'refresh');
+        }
+    }
+
+    public function getmodule()
+    {
+      if($this->session->userdata('logged_in'))
+      {
+          $session_data = $this->session->userdata('logged_in');
+          $id       = $session_data['company_code'];
+          $kode     = $session_data['user_id'];
+          $data     = array();
+          $query    = "SELECT sys_users.name, sys_module.module_name, sys_module.module_path, sys_module.slug, sys_module.module_level, sys_module.module_parent,
+                      sys_module.module_id, sys_module.module_order, sys_module.icon, sys_module.slug
+                      from sys_users
+                      inner join sys_roles on sys_users.role_id = sys_roles.role_id
+                      inner join sys_rule on sys_roles.role_id = sys_rule.role_id
+                      inner join sys_module on sys_rule.module_id = sys_module.module_id
+                      where sys_users.user_id='$kode' ORDER BY sys_module.module_order ASC ";
+                      //echo "<pre>";var_dump($query);exit();
+          $Q = $this->db->query($query);
+          if ($Q->num_rows() > 0){
+              foreach ($Q->result_array() as $row){
+                  $data[] = $row;
+              }
+          }
+          return $data;
+      }else{
+          redirect('login', 'refresh');
+      }
+    }
+
+    public function getversions(){
+      $query        = "SELECT mod_versions.version_id, mod_versions.version, mod_versions.subject, DATE_FORMAT(mod_versions.created, '%d-%m-%Y') AS created, sys_users.name
+                      FROM mod_versions
+                      INNER JOIN sys_users ON mod_versions.users_id = sys_users.user_id ";
+          $Q        =  $this->db->query($query);
+
+              if ($Q->num_rows() > 0)
+                  {
+                    foreach ($Q->result_array() as $row)
+                      {
+                        $data[] = $row;
+                      }
+                  }
+
+          return $data;
+      }
+
+    public function getdata($numbers = NULL)
+    {
+        $data       = array(); 
+        if($numbers == NULL)
+        {
+            $query      = "SELECT * FROM mod_company ";
+        } else {
+            $query      = "SELECT * FROM mod_company WHERE company_id ='".$numbers."' ";
+        }
+        
+        $Q          = $this->db->query($query);
+            if ($Q->num_rows() > 0)
+                {
+                  foreach ($Q->result_array() as $row)
+                    {
+                      $data[] = $row;
+                    }
+                }
+        return $data;
+    }
+
+    public function save_version($item){
+      $this->db->insert('mod_versions',$item);
+    }
+
+    public function get_email()
+        {
+            $data       = array();
+            $query      = "SELECT user_name FROM sys_users ";
+            $Q          = $this->db->query($query);
+                if ($Q->num_rows() > 0)
+                    {
+                      foreach ($Q->result_array() as $row)
+                        {
+                          $data[] = $row;
+                        }
+                    }
+          return $data;
+        }
+
 }
